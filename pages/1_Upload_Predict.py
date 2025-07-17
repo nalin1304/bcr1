@@ -127,86 +127,82 @@ def create_upload_section():
     return None, None
 
 def create_biomarker_section():
-    """Allow input for all biomarkers, not just one, and fix UI colors. Also allow image upload for each biomarker."""
+    """Allow input for exactly one biomarker, with correct dropdown options."""
     st.markdown("### 🧬 Biomarker Data Input")
-    st.markdown("Provide intensity, staining pattern, and location for each biomarker you want to analyze. Optionally, upload an image for each biomarker.")
+    st.markdown("Select the biomarker associated with this data point and provide its parameters. Optionally, upload an image for the biomarker.")
 
     biomarker_options = [
         'Ki-67', 'EGFR', 'ESR1', 'PGR', 'BRCA1', 'TP53', 'ERBB2', 'RB1',
         'SNAI1', 'SNAI', 'PTEN', 'CDH1', 'MKI67'
     ]
-    intensity_options = ['Negative', 'Moderate', 'Strong', 'Very Strong']
-    staining_options = ['Low', 'Medium', 'High', 'Not detected']
+    intensity_options = ['Moderate', 'Strong', 'Negative', 'Weak', 'Negative ', 'Strong ', 'Moderate ', 'Not detected', '315']
+    staining_options = ['Medium', 'High', 'Not detected', 'Low', 'Medium ', 'NOS (M-00100)', 'NOS (M-80003)', 'Lobular carcinoma (M-85203)']
     location_options = ['Nuclear', 'Cytoplasmic', 'Membranous']
 
     biomarker_data = {}
 
-    selected_biomarkers = st.multiselect(
-        "Select biomarkers for analysis",
+    selected_biomarker = st.selectbox(
+        "Select biomarker for analysis",
         biomarker_options,
-        default=[biomarker_options[0]],
-        help="Select one or more biomarkers to analyze for this image"
+        index=0,
+        help="Select the biomarker to analyze for this image"
     )
+    st.markdown(f"#### {selected_biomarker}")
+    try:
+        details = get_biomarker_details(selected_biomarker)
+    except:
+        details = get_biomarker_details_fallback(selected_biomarker)
+    st.markdown(f"<div style='color: var(--text-primary);'><b>Description:</b> {details}</div>", unsafe_allow_html=True)
 
-    for marker in selected_biomarkers:
-        st.markdown(f"#### {marker}")
+    intensity = st.selectbox(
+        f"Expression Intensity for {selected_biomarker}",
+        intensity_options,
+        index=0,
+        key=f"{selected_biomarker}_intensity",
+        help=f"Expression intensity for {selected_biomarker}"
+    )
+    staining = st.selectbox(
+        f"Staining Pattern for {selected_biomarker}",
+        staining_options,
+        index=0,
+        key=f"{selected_biomarker}_staining",
+        help=f"Staining pattern for {selected_biomarker}"
+    )
+    location = st.selectbox(
+        f"Cellular Location for {selected_biomarker}",
+        location_options,
+        index=0,
+        key=f"{selected_biomarker}_location",
+        help=f"Cellular location for {selected_biomarker}"
+    )
+    image_file = st.file_uploader(
+        f"Upload image for {selected_biomarker} (optional)",
+        type=['jpg', 'jpeg', 'png'],
+        key=f"{selected_biomarker}_image"
+    )
+    image_data = None
+    if image_file is not None:
         try:
-            details = get_biomarker_details(marker)
-        except:
-            details = get_biomarker_details_fallback(marker)
-        st.markdown(f"<div style='color: var(--text-primary);'><b>Description:</b> {details}</div>", unsafe_allow_html=True)
-
-        intensity = st.selectbox(
-            f"Expression Intensity for {marker}",
-            intensity_options,
-            index=0,
-            key=f"{marker}_intensity",
-            help=f"Expression intensity for {marker}"
-        )
-        staining = st.selectbox(
-            f"Staining Pattern for {marker}",
-            staining_options,
-            index=0,
-            key=f"{marker}_staining",
-            help=f"Staining pattern for {marker}"
-        )
-        location = st.selectbox(
-            f"Cellular Location for {marker}",
-            location_options,
-            index=0,
-            key=f"{marker}_location",
-            help=f"Cellular location for {marker}"
-        )
-        image_file = st.file_uploader(
-            f"Upload image for {marker} (optional)",
-            type=['jpg', 'jpeg', 'png'],
-            key=f"{marker}_image"
-        )
-        image_data = None
-        if image_file is not None:
-            try:
-                image_data = Image.open(image_file)
-            except Exception:
-                image_data = None
-        biomarker_data[marker] = {
-            'intensity': intensity,
-            'staining': staining,
-            'location': location,
-            'image': image_data
-        }
-        # Display summary with image if available
-        summary_html = f"""
-        <div style='color: var(--text-primary); border:1px solid #e2e8f0; border-radius:8px; padding:1rem; margin-bottom:1rem;'>
-        <b>🔬 {marker} Configuration:</b><br>
-        - <b>Intensity:</b> {intensity}<br>
-        - <b>Staining:</b> {staining}<br>
-        - <b>Location:</b> {location}
-        </div>
-        """
-        st.markdown(summary_html, unsafe_allow_html=True)
-        if image_data is not None:
-            st.image(image_data, caption=f"{marker} Image", use_column_width=True)
-
+            image_data = Image.open(image_file)
+        except Exception:
+            image_data = None
+    biomarker_data[selected_biomarker] = {
+        'intensity': intensity,
+        'staining': staining,
+        'location': location,
+        'image': image_data
+    }
+    summary_html = f"""
+    <div style='color: var(--text-primary); border:1px solid #e2e8f0; border-radius:8px; padding:1rem; margin-bottom:1rem;'>
+    <b>🔬 {selected_biomarker} Configuration:</b><br>
+    - <b>Intensity:</b> {intensity}<br>
+    - <b>Staining:</b> {staining}<br>
+    - <b>Location:</b> {location}
+    </div>
+    """
+    st.markdown(summary_html, unsafe_allow_html=True)
+    if image_data is not None:
+        st.image(image_data, caption=f"{selected_biomarker} Image", use_column_width=True)
     return biomarker_data
 
 def create_prediction_section(uploaded_file, image, biomarker_data):
