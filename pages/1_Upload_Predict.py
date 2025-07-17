@@ -137,7 +137,14 @@ def create_biomarker_section():
     ]
     intensity_options = ['Moderate', 'Strong', 'Negative', 'Weak', 'Negative ', 'Strong ', 'Moderate ', 'Not detected', '315']
     staining_options = ['Medium', 'High', 'Not detected', 'Low', 'Medium ', 'NOS (M-00100)', 'NOS (M-80003)', 'Lobular carcinoma (M-85203)']
-    location_options = ['Nuclear', 'Cytoplasmic', 'Membranous']
+    location_options = [
+        'Nuclear', 'Cytoplasmic', 'cytoplasmic', '-', 'Membranous nuclear', 'nan',
+        'Cytoplasmic/membranous', 'Cytoplasmic/membranous, Nuclear', 'Nuclear ',
+        'Cytoplasmic/membranous, nuclear ', 'Cytoplasmic/membranous ',
+        'Cytoplasmic membranous, nuclear ', 'Cytoplasmic membranous,nuclear ',
+        'Cytoplasmic/membranous,nuclear', 'Cytoplasmic/', 'Negative',
+        'Cytoplasmic/ membranous nuclear', 'Weak', 'Cytoplasmic/ membranous'
+    ]
 
     biomarker_data = {}
 
